@@ -1,25 +1,41 @@
+#[derive(Debug)]
+enum Status {
+    Pending,
+    Done,
+}
+
 struct Task {
 
     id: u32,
     description: String,
-    completed: bool,
+    status: Status,
 }
 
 fn render(task: &Task) {
 
-    println!("[{}] {} (done: {})", task.id, task.description, task.completed);
+    println!("[{}] {} (status: {:?})", task.id, task.description, task.status);
 }
 
 fn main() {
-    let task = Task {
+    let t1 = Task {
 
         id: 1,
-        description: String:: from("Write the Rust version"),
-        completed: false,
+        description: String::from("Write the Rust version"),
+        status: Status::Pending,
     };
 
-    render(&task);
-    render(&task);
+    let t2 = Task {
 
-    println!("{}", task.description);
+        id:2,
+        description: String::from("Commit the struct"),
+        status: Status::Done,
+    };
+
+    render(&t1);
+    render(&t2);
+    
+    println!("{:?}", t1.status);
+    println!("{:?}", t2.status);
+
+
 }
