@@ -66,6 +66,12 @@ fn rm_task(tasks: &mut Vec<Task>, id: u32) -> bool {
 
 fn main() {
     
+    let args: Vec<String> = std::env::args().collect();
+    match args.get(1) {
+        None => println!("no subcommand given"),
+        Some(cmd) => println!("Subcommand: {}", cmd),
+    }
+
     let mut tasks = vec![
         Task{
             id: 1,
