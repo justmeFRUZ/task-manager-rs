@@ -41,6 +41,29 @@ fn add_task(tasks: &mut Vec<Task>, description: String) -> u32 {
 
 } 
 
+
+fn mark_done(tasks: &mut Vec<Task>, id: u32) -> bool {
+    for task in tasks.iter_mut() {
+        if task.id == id {
+            task.status = Status::Done;
+            return true;
+        }
+    }
+
+    false
+}
+
+
+fn rm_task(tasks: &mut Vec<Task>, id: u32) -> bool {
+    match tasks.iter().position(|t| t.id == id) {
+        Some(index) => {
+            tasks.remove(index);
+            true
+        }
+        None => false,
+    }
+}
+
 fn main() {
     
     let mut tasks = vec![
@@ -59,6 +82,15 @@ fn main() {
 list_tasks(&tasks);
 let new_id = add_task(&mut tasks, String::from("Try add_task"));
 println!("added task {}", new_id);
+
+let found = mark_done(&mut tasks, 1);
+println!("mark_done(1) -> {}", found);
+
+let removed = rm_task(&mut tasks, 2);
+println!("rm_task(2) -> {}", removed);
+
+let missing = rm_task(&mut tasks, 99);
+println!("rm_task(99) -> {}", missing);
 
 list_tasks(&tasks);
 
