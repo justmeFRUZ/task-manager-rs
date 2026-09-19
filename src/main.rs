@@ -4,6 +4,11 @@ enum Status {
     Done,
 }
 
+#[derive(Debug)]
+enum TaskError {
+    NotFound { id: u32 },
+}
+
 struct Task {
 
     id: u32,
@@ -42,25 +47,25 @@ fn add_task(tasks: &mut Vec<Task>, description: String) -> u32 {
 } 
 
 
-fn mark_done(tasks: &mut Vec<Task>, id: u32) -> bool {
+fn mark_done(tasks: &mut Vec<Task>, id: u32) -> Result<(), TaskError> {
     for task in tasks.iter_mut() {
         if task.id == id {
             task.status = Status::Done;
-            return true;
+            return Ok(());
         }
     }
 
-    false
+    Err(TaskError::NotFound { id })
 }
 
 
-fn rm_task(tasks: &mut Vec<Task>, id: u32) -> bool {
+fn rm_task(tasks: &mut Vec<Task>, id: u32) -> Result<(), TaskError> {
     match tasks.iter().position(|t| t.id == id) {
         Some(index) => {
             tasks.remove(index);
-            true
+            Ok(())
         }
-        None => false,
+        None => Err(TaskError::NotFound { id }),
     }
 }
 
@@ -82,7 +87,7 @@ fn main() {
         Some("done") => match args.get(2).map(|s| s.parse::<u32>()) {
             Some(Ok(id)) => {
                 let found = mark_done(&mut tasks, id);
-                println!("mark_done({}) -> {}", id, found);
+                println!("mark_done({}) -> {}", id, found.is_ok());
             }
 
             Some(Err(_)) => println!("done requires a numeric id"),
@@ -92,7 +97,7 @@ fn main() {
         Some("rm") => match args.get(2).map(|s| s.parse::<u32>()) {
             Some(Ok(id)) => {
                 let removed = rm_task(&mut tasks, id);
-                println!("rm_task({}) -> {}", id, removed);
+                println!("rm_task({}) -> {}", id, removed.is_ok());
             }
             Some(Err(_)) => println!("rm requires a numeric id"),
             None => println!("rm requires an id")
