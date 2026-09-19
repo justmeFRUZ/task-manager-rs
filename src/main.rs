@@ -65,39 +65,20 @@ fn rm_task(tasks: &mut Vec<Task>, id: u32) -> bool {
 }
 
 fn main() {
-    
+  
     let args: Vec<String> = std::env::args().collect();
-    match args.get(1) {
+    let mut tasks: Vec<Task> = Vec::new();
+
+    match args.get(1).map(String::as_str) {
         None => println!("no subcommand given"),
-        Some(cmd) => println!("Subcommand: {}", cmd),
+        Some("add") => match args.get(2) {
+            Some(description) => {
+                let id = add_task(&mut tasks, description.clone());
+                println!("added task {}", id);
+            }
+            None => println!("add requires a description"),
+        },
+        Some("list") => list_tasks(&tasks),
+        Some(other) => println!("unknown subcommand: {}", other),
     }
-
-    let mut tasks = vec![
-        Task{
-            id: 1,
-            description: String::from("Write the Rust Verison"),
-            status: Status::Pending,
-        },
-        Task {
-            id: 2,
-            description: String::from("Commit the strut"),
-            status: Status::Done,
-        },
-    ];
-
-list_tasks(&tasks);
-let new_id = add_task(&mut tasks, String::from("Try add_task"));
-println!("added task {}", new_id);
-
-let found = mark_done(&mut tasks, 1);
-println!("mark_done(1) -> {}", found);
-
-let removed = rm_task(&mut tasks, 2);
-println!("rm_task(2) -> {}", removed);
-
-let missing = rm_task(&mut tasks, 99);
-println!("rm_task(99) -> {}", missing);
-
-list_tasks(&tasks);
-
 }
