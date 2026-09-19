@@ -79,6 +79,25 @@ fn main() {
             None => println!("add requires a description"),
         },
         Some("list") => list_tasks(&tasks),
+        Some("done") => match args.get(2).map(|s| s.parse::<u32>()) {
+            Some(Ok(id)) => {
+                let found = mark_done(&mut tasks, id);
+                println!("mark_done({}) -> {}", id, found);
+            }
+
+            Some(Err(_)) => println!("done requires a numeric id"),
+            None => println!("done requires an id"),
+        },
+
+        Some("rm") => match args.get(2).map(|s| s.parse::<u32>()) {
+            Some(Ok(id)) => {
+                let removed = rm_task(&mut tasks, id);
+                println!("rm_task({}) -> {}", id, removed);
+            }
+            Some(Err(_)) => println!("rm requires a numeric id"),
+            None => println!("rm requires an id")
+        }
+
         Some(other) => println!("unknown subcommand: {}", other),
     }
 }
