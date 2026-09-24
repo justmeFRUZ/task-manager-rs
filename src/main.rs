@@ -114,6 +114,8 @@ fn render_error(e: &TaskError) -> String {
 
 fn main() {
   
+  #[cfg(test)]
+mod tests {}
 
     let args: Vec<String> = std::env::args().collect();
     let path = "tasks.json";
@@ -173,9 +175,147 @@ fn main() {
             },
 
             Some(Err(_)) => println!("rm requires a numeric id"),
-            None => println!("re requires an id")
-        }
+            None => println!("rm requires an id")
+        },
 
         Some(other) => println!("unknown subcommand: {}", other),
     }
 }
+
+
+#[cfg(test)]
+
+fn temp_path(name: &str) -> String {
+    std::env::temp_dir()
+    .join(name)
+    .to_string_lossy()
+    .into_owned()
+}
+#[cfg(test)]
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_task_returns_incremented_id_on_empty_list() {
+        let mut tasks: Vec<Task> = Vec::new();
+        let id = add_task(&mut tasks, String::from("buy milk"));
+        assert_eq!(id, 1);
+        assert_eq!(tasks.len(), 1);
+    }
+
+    #[test]
+    fn add_task_returns_max_id_plus_one() {
+        let mut tasks = vec![
+            Task {id: 1, description: String::from("a"), status: Status::Pending},
+            Task {id: 5, description: String::from("b"), status: Status::Pending},
+
+        ];
+        let id = add_task(&mut tasks, String::from("c"));
+        assert_eq!(id, 6);
+    }
+
+    #[test]
+    fn add_task_second_call_increments_id() {
+        let mut tasks: Vec<Task> = Vec::new();
+        add_task(&mut tasks, String::from("first"));
+        let id = add_task(&mut tasks, String::from("second"));
+        assert_eq!(id, 2);
+
+    }
+    
+        #[test]
+        fn mark_done_sets_status_to_done() {
+            let mut tasks = vec! [
+                Task {id: 1, description: String::from("a"), status: Status::Pending},
+
+            ];
+
+            let result = mark_done(&mut tasks, 1);
+            assert!(result.is_ok());
+            assert!(matches!(tasks[0].status, Status::Done));
+        }
+
+        #[test]
+        fn mark_done_unknown_id_returns_not_found() {
+            let mut tasks: Vec<Task> = Vec::new();
+            let result = mark_done(&mut tasks, 999);
+            assert!(matches!(result, Err(TaskError::NotFound {id: 999})));
+        }
+
+        #[test]
+        fn rm_task_removes_task() {
+            let mut tasks = vec![
+                Task {id: 1, description: String::from("a"), status: Status::Pending},
+
+            ];
+            let result = rm_task(&mut tasks, 1);
+            assert!(result.is_ok());
+            assert_eq!(tasks.len(), 0);
+        }
+
+
+        #[test]
+        fn rm_task_unknown_id_returns_not_found() {
+            let mut tasks: Vec<Task> = Vec::new();
+            let result = rm_task(&mut tasks, 999);
+            assert!(matches!(result, Err(TaskError::NotFound {id: 999})));
+        }
+
+        #[test]
+        fn load_tasks_missing_file_returns_empty_vec() {
+            let path = temp_path("tm_rs_missing_never_exists.json");
+            let _ = std::fs::remove_file(&path);
+            let result = load_tasks(&path);
+            assert!(matches!(result, Ok(ref v) if v.is_empty()));
+        }
+
+        #[test]
+        fn load_tasks_corrupted_file_returns_corrupted_error() {
+            let path = temp_path("tm_rs_corrupted.json");
+            std::fs::write(&path, "this is not json").expect("write to temp dir failed");
+
+            let result = load_tasks(&path);
+            assert!(matches!(result, Err(TaskError::Corrupted(_))));
+            let _ = std::fs::remove_file(&path);
+
+        }
+
+
+        #[test]
+        fn save_then_load_round_trips() {
+
+            let path = temp_path("tm_rs_roundtrip.json");
+            let _ = std::fs::remove_file(&path);
+            let mut tasks: Vec<Task> = Vec::new();
+            add_task(&mut tasks, String::from("buy milk"));
+            add_task(&mut tasks, String::from("walk dog"));
+            save_tasks(&path, &tasks).expect("save to temp dir failed");
+            let loaded: Vec<Task> = load_tasks(&path).expect("load from temp dir failed");
+            assert_eq!(loaded.len(), 2);
+            assert_eq!(loaded[0].id, 1);
+            assert_eq!(loaded[0].description, "buy milk");
+            assert_eq!(loaded[1].id, 2);
+            assert!(matches!(loaded[0].status, Status::Pending));
+            let _ = std::fs::remove_file(&path);
+
+        }
+
+
+
+        #[test]
+        fn load_task_json_type_mismatch_returns_corrupted() {
+            let path = temp_path("tm_rs_type_mismatch.json");
+            std::fs::write(
+                &path,
+                r#"[{"id":"not a number","description":"a","status":"Pending"}]"#,
+
+            )
+            .expect("write to temp dir failed");
+        let result = load_tasks(&path);
+        assert!(matches!(result, Err(TaskError::Corrupted(_))));
+        let _ = std::fs::remove_file(&path);
+        }
+
+
+    }
