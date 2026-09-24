@@ -318,4 +318,36 @@ mod tests {
         }
 
 
+
+        #[test]
+        fn save_tasks_permission_denied_returns_io_error() {
+            let path = temp_path("tm_rs_perm_denied.json");
+            let _ = std::fs::remove_file(&path);
+            std::fs::write(&path, "[]").expect("initial write to temp dir failed");
+
+            let mut perms = std::fs::metadata(&path)
+                .expect("metadat failed")
+                .permissions();
+            perms.set_readonly(true);
+            std::fs::set_permissions(&path, perms).expect("set_permissions failed");
+
+            let tasks: Vec<Task> = Vec::new();
+            let result = save_tasks(&path, &tasks);
+
+
+            let mut perms = std::fs::metadata(&path)
+            .expect("metadata failed")
+            .permissions();
+        perms.set_readonly(false);
+        std::fs::set_permissions(&path, perms).expect("restore permissions failed");
+
+
+        assert!(matches!(result, Err(TaskError::Io(_))));
+
+        let _ = std::fs::remove_file(&path);
+
+        }
+
+
+
     }
