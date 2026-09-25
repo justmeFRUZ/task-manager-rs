@@ -114,8 +114,7 @@ fn render_error(e: &TaskError) -> String {
 
 fn main() {
   
-  #[cfg(test)]
-mod tests {}
+
 
     let args: Vec<String> = std::env::args().collect();
     let path = "tasks.json";
