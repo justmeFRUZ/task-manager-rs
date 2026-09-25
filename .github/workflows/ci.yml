@@ -7,5 +7,5 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@vs
+      - uses: actions/checkout@v5
       - run: cargo test
