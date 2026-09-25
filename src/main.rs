@@ -53,7 +53,8 @@ fn add_task(tasks: &mut Vec<Task>, description: String) -> u32 {
     new_id
 }
 
-fn mark_done(tasks: &mut [Task], id: u32) -> Result<(), TaskError> {    for task in tasks.iter_mut() {
+fn mark_done(tasks: &mut [Task], id: u32) -> Result<(), TaskError> {
+    for task in tasks.iter_mut() {
         if task.id == id {
             task.status = Status::Done;
             return Ok(());
@@ -315,17 +316,13 @@ mod tests {
         let _ = std::fs::remove_file(&path);
         std::fs::write(&path, "[]").expect("initial write to temp dir failed");
 
-
         let original_perms = std::fs::metadata(&path)
             .expect("metadata failed")
             .permissions();
 
-
-
-            let mut readonly_perms = original_perms.clone();
-            readonly_perms.set_readonly(true);
-            std::fs::set_permissions(&path, readonly_perms).expect("set_permissions failed");
-
+        let mut readonly_perms = original_perms.clone();
+        readonly_perms.set_readonly(true);
+        std::fs::set_permissions(&path, readonly_perms).expect("set_permissions failed");
 
         let tasks: Vec<Task> = Vec::new();
         let result = save_tasks(&path, &tasks);
