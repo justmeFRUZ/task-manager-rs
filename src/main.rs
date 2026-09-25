@@ -15,15 +15,16 @@ enum TaskError {
 
 #[derive(Serialize, Deserialize)]
 struct Task {
-
     id: u32,
     description: String,
     status: Status,
 }
 
 fn render(task: &Task) {
-
-    println!("[{}] {} (status: {:?})", task.id, task.description, task.status);
+    println!(
+        "[{}] {} (status: {:?})",
+        task.id, task.description, task.status
+    );
 }
 
 fn list_tasks(tasks: &[Task]) {
@@ -33,7 +34,6 @@ fn list_tasks(tasks: &[Task]) {
 }
 
 fn add_task(tasks: &mut Vec<Task>, description: String) -> u32 {
-
     let mut max_id = 0;
     for task in tasks.iter() {
         if task.id > max_id {
@@ -44,16 +44,13 @@ fn add_task(tasks: &mut Vec<Task>, description: String) -> u32 {
     let new_id = max_id + 1;
     tasks.push(Task {
         id: new_id,
-        description: description,
+        description,
         status: Status::Pending,
     });
     new_id
+}
 
-} 
-
-
-fn mark_done(tasks: &mut Vec<Task>, id: u32) -> Result<(), TaskError> {
-    for task in tasks.iter_mut() {
+fn mark_done(tasks: &mut [Task], id: u32) -> Result<(), TaskError> {    for task in tasks.iter_mut() {
         if task.id == id {
             task.status = Status::Done;
             return Ok(());
@@ -62,7 +59,6 @@ fn mark_done(tasks: &mut Vec<Task>, id: u32) -> Result<(), TaskError> {
 
     Err(TaskError::NotFound { id })
 }
-
 
 fn rm_task(tasks: &mut Vec<Task>, id: u32) -> Result<(), TaskError> {
     match tasks.iter().position(|t| t.id == id) {
@@ -73,7 +69,6 @@ fn rm_task(tasks: &mut Vec<Task>, id: u32) -> Result<(), TaskError> {
         None => Err(TaskError::NotFound { id }),
     }
 }
-
 
 fn load_tasks(path: &str) -> Result<Vec<Task>, TaskError> {
     let contents = match std::fs::read_to_string(path) {
@@ -103,27 +98,21 @@ fn save_tasks(path: &str, tasks: &[Task]) -> Result<(), TaskError> {
     }
 }
 
-
 fn render_error(e: &TaskError) -> String {
     match e {
-        TaskError::NotFound {id} => format!("task {} not found", id),
-        TaskError::Io(io_err) => format! ("I/O error: {}", io_err),
+        TaskError::NotFound { id } => format!("task {} not found", id),
+        TaskError::Io(io_err) => format!("I/O error: {}", io_err),
         TaskError::Corrupted(msg) => format!("data corrupted: {}", msg),
     }
 }
 
 fn main() {
-  
-
-
     let args: Vec<String> = std::env::args().collect();
     let path = "tasks.json";
 
     let mut tasks: Vec<Task> = match load_tasks(path) {
-
         Ok(t) => t,
         Err(e) => {
-
             eprintln!("failed to load tasks: {}", render_error(&e));
             std::process::exit(1);
         }
@@ -137,7 +126,6 @@ fn main() {
                 if let Err(e) = save_tasks(path, &tasks) {
                     eprintln!("failed to save tasks: {}", render_error(&e));
                     std::process::exit(1);
-
                 }
                 println!("added task {}", id);
             }
@@ -167,28 +155,26 @@ fn main() {
                         eprintln!("failed to save tasks: {}", render_error(&e));
                         std::process::exit(1);
                     }
-                    println!("rm_task({}) -> ok", id );
-
+                    println!("rm_task({}) -> ok", id);
                 }
                 Err(e) => println!("rm_task({}) -> {}", id, render_error(&e)),
             },
 
             Some(Err(_)) => println!("rm requires a numeric id"),
-            None => println!("rm requires an id")
+            None => println!("rm requires an id"),
         },
 
         Some(other) => println!("unknown subcommand: {}", other),
     }
 }
 
-
 #[cfg(test)]
 
 fn temp_path(name: &str) -> String {
     std::env::temp_dir()
-    .join(name)
-    .to_string_lossy()
-    .into_owned()
+        .join(name)
+        .to_string_lossy()
+        .into_owned()
 }
 #[cfg(test)]
 
@@ -206,9 +192,16 @@ mod tests {
     #[test]
     fn add_task_returns_max_id_plus_one() {
         let mut tasks = vec![
-            Task {id: 1, description: String::from("a"), status: Status::Pending},
-            Task {id: 5, description: String::from("b"), status: Status::Pending},
-
+            Task {
+                id: 1,
+                description: String::from("a"),
+                status: Status::Pending,
+            },
+            Task {
+                id: 5,
+                description: String::from("b"),
+                status: Status::Pending,
+            },
         ];
         let id = add_task(&mut tasks, String::from("c"));
         assert_eq!(id, 6);
@@ -220,146 +213,128 @@ mod tests {
         add_task(&mut tasks, String::from("first"));
         let id = add_task(&mut tasks, String::from("second"));
         assert_eq!(id, 2);
-
     }
-    
-        #[test]
-        fn mark_done_sets_status_to_done() {
-            let mut tasks = vec! [
-                Task {id: 1, description: String::from("a"), status: Status::Pending},
 
-            ];
+    #[test]
+    fn mark_done_sets_status_to_done() {
+        let mut tasks = vec![Task {
+            id: 1,
+            description: String::from("a"),
+            status: Status::Pending,
+        }];
 
-            let result = mark_done(&mut tasks, 1);
-            assert!(result.is_ok());
-            assert!(matches!(tasks[0].status, Status::Done));
-        }
+        let result = mark_done(&mut tasks, 1);
+        assert!(result.is_ok());
+        assert!(matches!(tasks[0].status, Status::Done));
+    }
 
-        #[test]
-        fn mark_done_unknown_id_returns_not_found() {
-            let mut tasks: Vec<Task> = Vec::new();
-            let result = mark_done(&mut tasks, 999);
-            assert!(matches!(result, Err(TaskError::NotFound {id: 999})));
-        }
+    #[test]
+    fn mark_done_unknown_id_returns_not_found() {
+        let mut tasks: Vec<Task> = Vec::new();
+        let result = mark_done(&mut tasks, 999);
+        assert!(matches!(result, Err(TaskError::NotFound { id: 999 })));
+    }
 
-        #[test]
-        fn rm_task_removes_task() {
-            let mut tasks = vec![
-                Task {id: 1, description: String::from("a"), status: Status::Pending},
+    #[test]
+    fn rm_task_removes_task() {
+        let mut tasks = vec![Task {
+            id: 1,
+            description: String::from("a"),
+            status: Status::Pending,
+        }];
+        let result = rm_task(&mut tasks, 1);
+        assert!(result.is_ok());
+        assert_eq!(tasks.len(), 0);
+    }
 
-            ];
-            let result = rm_task(&mut tasks, 1);
-            assert!(result.is_ok());
-            assert_eq!(tasks.len(), 0);
-        }
+    #[test]
+    fn rm_task_unknown_id_returns_not_found() {
+        let mut tasks: Vec<Task> = Vec::new();
+        let result = rm_task(&mut tasks, 999);
+        assert!(matches!(result, Err(TaskError::NotFound { id: 999 })));
+    }
 
+    #[test]
+    fn load_tasks_missing_file_returns_empty_vec() {
+        let path = temp_path("tm_rs_missing_never_exists.json");
+        let _ = std::fs::remove_file(&path);
+        let result = load_tasks(&path);
+        assert!(matches!(result, Ok(ref v) if v.is_empty()));
+    }
 
-        #[test]
-        fn rm_task_unknown_id_returns_not_found() {
-            let mut tasks: Vec<Task> = Vec::new();
-            let result = rm_task(&mut tasks, 999);
-            assert!(matches!(result, Err(TaskError::NotFound {id: 999})));
-        }
+    #[test]
+    fn load_tasks_corrupted_file_returns_corrupted_error() {
+        let path = temp_path("tm_rs_corrupted.json");
+        std::fs::write(&path, "this is not json").expect("write to temp dir failed");
 
-        #[test]
-        fn load_tasks_missing_file_returns_empty_vec() {
-            let path = temp_path("tm_rs_missing_never_exists.json");
-            let _ = std::fs::remove_file(&path);
-            let result = load_tasks(&path);
-            assert!(matches!(result, Ok(ref v) if v.is_empty()));
-        }
-
-        #[test]
-        fn load_tasks_corrupted_file_returns_corrupted_error() {
-            let path = temp_path("tm_rs_corrupted.json");
-            std::fs::write(&path, "this is not json").expect("write to temp dir failed");
-
-            let result = load_tasks(&path);
-            assert!(matches!(result, Err(TaskError::Corrupted(_))));
-            let _ = std::fs::remove_file(&path);
-
-        }
-
-
-        #[test]
-        fn save_then_load_round_trips() {
-
-            let path = temp_path("tm_rs_roundtrip.json");
-            let _ = std::fs::remove_file(&path);
-            let mut tasks: Vec<Task> = Vec::new();
-            add_task(&mut tasks, String::from("buy milk"));
-            add_task(&mut tasks, String::from("walk dog"));
-            save_tasks(&path, &tasks).expect("save to temp dir failed");
-            let loaded: Vec<Task> = load_tasks(&path).expect("load from temp dir failed");
-            assert_eq!(loaded.len(), 2);
-            assert_eq!(loaded[0].id, 1);
-            assert_eq!(loaded[0].description, "buy milk");
-            assert_eq!(loaded[1].id, 2);
-            assert!(matches!(loaded[0].status, Status::Pending));
-            let _ = std::fs::remove_file(&path);
-
-        }
-
-
-
-        #[test]
-        fn load_task_json_type_mismatch_returns_corrupted() {
-            let path = temp_path("tm_rs_type_mismatch.json");
-            std::fs::write(
-                &path,
-                r#"[{"id":"not a number","description":"a","status":"Pending"}]"#,
-
-            )
-            .expect("write to temp dir failed");
         let result = load_tasks(&path);
         assert!(matches!(result, Err(TaskError::Corrupted(_))));
         let _ = std::fs::remove_file(&path);
-        }
+    }
+
+    #[test]
+    fn save_then_load_round_trips() {
+        let path = temp_path("tm_rs_roundtrip.json");
+        let _ = std::fs::remove_file(&path);
+        let mut tasks: Vec<Task> = Vec::new();
+        add_task(&mut tasks, String::from("buy milk"));
+        add_task(&mut tasks, String::from("walk dog"));
+        save_tasks(&path, &tasks).expect("save to temp dir failed");
+        let loaded: Vec<Task> = load_tasks(&path).expect("load from temp dir failed");
+        assert_eq!(loaded.len(), 2);
+        assert_eq!(loaded[0].id, 1);
+        assert_eq!(loaded[0].description, "buy milk");
+        assert_eq!(loaded[1].id, 2);
+        assert!(matches!(loaded[0].status, Status::Pending));
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn load_task_json_type_mismatch_returns_corrupted() {
+        let path = temp_path("tm_rs_type_mismatch.json");
+        std::fs::write(
+            &path,
+            r#"[{"id":"not a number","description":"a","status":"Pending"}]"#,
+        )
+        .expect("write to temp dir failed");
+        let result = load_tasks(&path);
+        assert!(matches!(result, Err(TaskError::Corrupted(_))));
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn save_tasks_permission_denied_returns_io_error() {
+        let path = temp_path("tm_rs_perm_denied.json");
+        let _ = std::fs::remove_file(&path);
+        std::fs::write(&path, "[]").expect("initial write to temp dir failed");
 
 
-
-        #[test]
-        fn save_tasks_permission_denied_returns_io_error() {
-            let path = temp_path("tm_rs_perm_denied.json");
-            let _ = std::fs::remove_file(&path);
-            std::fs::write(&path, "[]").expect("initial write to temp dir failed");
-
-            let mut perms = std::fs::metadata(&path)
-                .expect("metadat failed")
-                .permissions();
-            perms.set_readonly(true);
-            std::fs::set_permissions(&path, perms).expect("set_permissions failed");
-
-            let tasks: Vec<Task> = Vec::new();
-            let result = save_tasks(&path, &tasks);
-
-
-            let mut perms = std::fs::metadata(&path)
+        let original_perms = std::fs::metadata(&path)
             .expect("metadata failed")
             .permissions();
-        perms.set_readonly(false);
-        std::fs::set_permissions(&path, perms).expect("restore permissions failed");
 
 
+
+            let mut readonly_perms = original_perms.clone();
+            readonly_perms.set_readonly(true);
+            std::fs::set_permissions(&path, readonly_perms).expect("set_permissions failed");
+
+
+        let tasks: Vec<Task> = Vec::new();
+        let result = save_tasks(&path, &tasks);
+
+        std::fs::set_permissions(&path, original_perms).expect("restore permissions failed");
         assert!(matches!(result, Err(TaskError::Io(_))));
 
         let _ = std::fs::remove_file(&path);
-
-        }
-
-
-
-
-        #[test]
-        fn load_tasks_whitespace_only_file_returns_empty_vec() {
-            let path = temp_path("tm_rs_whitespace_json");
-            std::fs::write(&path, " \n\t  \n").expect("write to temp dir failed");
-            let result = load_tasks(&path);
-            assert!(matches!(result, Ok(ref v) if v.is_empty()));
-            let _ = std::fs::remove_file(&path);
-
-        }
-
-
-
     }
+
+    #[test]
+    fn load_tasks_whitespace_only_file_returns_empty_vec() {
+        let path = temp_path("tm_rs_whitespace_json");
+        std::fs::write(&path, " \n\t  \n").expect("write to temp dir failed");
+        let result = load_tasks(&path);
+        assert!(matches!(result, Ok(ref v) if v.is_empty()));
+        let _ = std::fs::remove_file(&path);
+    }
+}
