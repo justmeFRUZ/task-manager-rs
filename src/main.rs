@@ -27,8 +27,11 @@ fn render(task: &Task) {
     );
 }
 
-fn list_tasks(tasks: &[Task]) {
+fn list_tasks(tasks: &[Task], only_pending: bool) {
     for task in tasks {
+        if only_pending && !matches!(task.status, Status::Pending) {
+            continue;
+        }
         render(task);
     }
 }
@@ -131,7 +134,11 @@ fn main() {
             }
             None => println!("add requires a description"),
         },
-        Some("list") => list_tasks(&tasks),
+        Some("list") => match args.get(2).map(String::as_str) {
+            None => list_tasks(&tasks, false),
+            Some("--pending") => list_tasks(&tasks, true),
+            Some(other) => println!("unknown flag for list: {}", other),
+        },
         Some("done") => match args.get(2).map(|s| s.parse::<u32>()) {
             Some(Ok(id)) => match mark_done(&mut tasks, id) {
                 Ok(()) => {
