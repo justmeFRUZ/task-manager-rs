@@ -147,9 +147,9 @@ fn main() {
                         eprintln!("failed to save tasks: {}", render_error(&e));
                         std::process::exit(1);
                     }
-                    println!("mark_done({}) -> ok", id);
+                    println!("marked task {} as done", id);
                 }
-                Err(e) => println!("mark_done({}) -> {}", id, render_error(&e)),
+                Err(e) => println!("{}", render_error(&e)),
             },
 
             Some(Err(_)) => println!("done requires a numeric id"),
@@ -163,9 +163,9 @@ fn main() {
                         eprintln!("failed to save tasks: {}", render_error(&e));
                         std::process::exit(1);
                     }
-                    println!("rm_task({}) -> ok", id);
+                    println!("removed task {}", id);
                 }
-                Err(e) => println!("rm_task({}) -> {}", id, render_error(&e)),
+                Err(e) => println!("{}", render_error(&e)),
             },
 
             Some(Err(_)) => println!("rm requires a numeric id"),

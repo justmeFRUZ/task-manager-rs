@@ -7,6 +7,10 @@ This is the third version of the same tool. The point of the repo is the
 progression, not the tool - same requirements, three implementations, with
 the trade-offs written down at each step.
 
+## Demo
+
+![CLI demo](demo.png)
+
 ## What it does
 
     task-manager-rs.exe add "write README"
