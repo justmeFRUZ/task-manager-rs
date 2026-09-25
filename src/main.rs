@@ -350,4 +350,17 @@ mod tests {
 
 
 
+
+        #[test]
+        fn load_tasks_whitespace_only_file_returns_empty_vec() {
+            let path = temp_path("tm_rs_whitespace_json");
+            std::fs::write(&path, " \n\t  \n").expect("write to temp dir failed");
+            let result = load_tasks(&path);
+            assert!(matches!(result, Ok(ref v) if v.is_empty()));
+            let _ = std::fs::remove_file(&path);
+
+        }
+
+
+
     }
