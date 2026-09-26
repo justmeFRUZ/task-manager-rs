@@ -6,6 +6,14 @@ enum Status {
     Done,
 }
 
+#[derive(Debug, Default, Serialize, Deserialize)]
+enum Priority {
+    Low,
+    #[default]
+    Medium,
+    High,
+}
+
 #[derive(Debug)]
 enum TaskError {
     NotFound { id: u32 },
@@ -18,6 +26,8 @@ struct Task {
     id: u32,
     description: String,
     status: Status,
+    #[serde(default)]
+    priority: Priority,
 }
 
 fn render(task: &Task) {
@@ -49,6 +59,7 @@ fn add_task(tasks: &mut Vec<Task>, description: String) -> u32 {
         id: new_id,
         description,
         status: Status::Pending,
+        priority: Priority::Medium,
     });
     new_id
 }
@@ -204,11 +215,13 @@ mod tests {
                 id: 1,
                 description: String::from("a"),
                 status: Status::Pending,
+                priority: Priority::Medium,
             },
             Task {
                 id: 5,
                 description: String::from("b"),
                 status: Status::Pending,
+                priority: Priority::Medium,
             },
         ];
         let id = add_task(&mut tasks, String::from("c"));
@@ -229,6 +242,7 @@ mod tests {
             id: 1,
             description: String::from("a"),
             status: Status::Pending,
+            priority: Priority::Medium,
         }];
 
         let result = mark_done(&mut tasks, 1);
@@ -249,6 +263,7 @@ mod tests {
             id: 1,
             description: String::from("a"),
             status: Status::Pending,
+            priority: Priority::Medium,
         }];
         let result = rm_task(&mut tasks, 1);
         assert!(result.is_ok());
