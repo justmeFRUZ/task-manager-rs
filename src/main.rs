@@ -28,6 +28,8 @@ struct Task {
     status: Status,
     #[serde(default)]
     priority: Priority,
+    #[serde(default)]
+    tags: Vec<String>,
 }
 
 fn render(task: &Task) {
@@ -37,7 +39,7 @@ fn render(task: &Task) {
     );
 }
 
-fn list_tasks(tasks: &[Task], only_pending: bool) {
+fn list_tasks(tasks: &[Task], only_pending: bool, tag_filter: Option<&str>) {
     let mut view: Vec<&Task> = tasks.iter().collect();
     view.sort_by(|a, b| b.priority.cmp(&a.priority).then(a.id.cmp(&b.id)));
 
@@ -45,11 +47,14 @@ fn list_tasks(tasks: &[Task], only_pending: bool) {
         if only_pending && !matches!(task.status, Status::Pending) {
             continue;
         }
+        if tag_filter.is_some_and(|tag| !task.tags.iter().any(|t| t.as_str() == tag)) {
+            continue;
+        }
         render(task);
     }
 }
 
-fn add_task(tasks: &mut Vec<Task>, description: String) -> u32 {
+fn add_task(tasks: &mut Vec<Task>, description: String, tags: Vec<String>) -> u32 {
     let mut max_id = 0;
     for task in tasks.iter() {
         if task.id > max_id {
@@ -63,8 +68,23 @@ fn add_task(tasks: &mut Vec<Task>, description: String) -> u32 {
         description,
         status: Status::Pending,
         priority: Priority::Medium,
+        tags,
     });
     new_id
+}
+
+fn parse_tags(rest: &[String]) -> Vec<String> {
+    let mut tags = Vec::new();
+    let mut i = 0;
+    while i + 1 < rest.len() {
+        if rest[i] == "--tag" {
+            tags.push(rest[i + 1].clone());
+            i += 2;
+        } else {
+            i += 1;
+        }
+    }
+    tags
 }
 
 fn mark_done(tasks: &mut [Task], id: u32) -> Result<(), TaskError> {
@@ -140,7 +160,7 @@ fn main() {
         None => println!("no subcommand given"),
         Some("add") => match args.get(2) {
             Some(description) => {
-                let id = add_task(&mut tasks, description.clone());
+                let id = add_task(&mut tasks, description.clone(), parse_tags(&args[3..]));
                 if let Err(e) = save_tasks(path, &tasks) {
                     eprintln!("failed to save tasks: {}", render_error(&e));
                     std::process::exit(1);
@@ -150,8 +170,12 @@ fn main() {
             None => println!("add requires a description"),
         },
         Some("list") => match args.get(2).map(String::as_str) {
-            None => list_tasks(&tasks, false),
-            Some("--pending") => list_tasks(&tasks, true),
+            None => list_tasks(&tasks, false, None),
+            Some("--pending") => list_tasks(&tasks, true, None),
+            Some("--tag") => match args.get(3) {
+                Some(tag) => list_tasks(&tasks, false, Some(tag.as_str())),
+                None => println!("list --tag requires a tag value"),
+            },
             Some(other) => println!("unknown flag for list: {}", other),
         },
         Some("done") => match args.get(2).map(|s| s.parse::<u32>()) {
@@ -206,7 +230,7 @@ mod tests {
     #[test]
     fn add_task_returns_incremented_id_on_empty_list() {
         let mut tasks: Vec<Task> = Vec::new();
-        let id = add_task(&mut tasks, String::from("buy milk"));
+        let id = add_task(&mut tasks, String::from("buy milk"), Vec::new());
         assert_eq!(id, 1);
         assert_eq!(tasks.len(), 1);
     }
@@ -219,23 +243,25 @@ mod tests {
                 description: String::from("a"),
                 status: Status::Pending,
                 priority: Priority::Medium,
+                tags: Vec::new(),
             },
             Task {
                 id: 5,
                 description: String::from("b"),
                 status: Status::Pending,
                 priority: Priority::Medium,
+                tags: Vec::new(),
             },
         ];
-        let id = add_task(&mut tasks, String::from("c"));
+        let id = add_task(&mut tasks, String::from("c"), Vec::new());
         assert_eq!(id, 6);
     }
 
     #[test]
     fn add_task_second_call_increments_id() {
         let mut tasks: Vec<Task> = Vec::new();
-        add_task(&mut tasks, String::from("first"));
-        let id = add_task(&mut tasks, String::from("second"));
+        add_task(&mut tasks, String::from("first"), Vec::new());
+        let id = add_task(&mut tasks, String::from("second"), Vec::new());
         assert_eq!(id, 2);
     }
 
@@ -246,6 +272,7 @@ mod tests {
             description: String::from("a"),
             status: Status::Pending,
             priority: Priority::Medium,
+            tags: Vec::new(),
         }];
 
         let result = mark_done(&mut tasks, 1);
@@ -267,6 +294,7 @@ mod tests {
             description: String::from("a"),
             status: Status::Pending,
             priority: Priority::Medium,
+            tags: Vec::new(),
         }];
         let result = rm_task(&mut tasks, 1);
         assert!(result.is_ok());
@@ -303,8 +331,8 @@ mod tests {
         let path = temp_path("tm_rs_roundtrip.json");
         let _ = std::fs::remove_file(&path);
         let mut tasks: Vec<Task> = Vec::new();
-        add_task(&mut tasks, String::from("buy milk"));
-        add_task(&mut tasks, String::from("walk dog"));
+        add_task(&mut tasks, String::from("buy milk"), Vec::new());
+        add_task(&mut tasks, String::from("walk dog"), Vec::new());
         save_tasks(&path, &tasks).expect("save to temp dir failed");
         let loaded: Vec<Task> = load_tasks(&path).expect("load from temp dir failed");
         assert_eq!(loaded.len(), 2);
