@@ -6,7 +6,7 @@ enum Status {
     Done,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 enum Priority {
     Low,
     #[default]
@@ -32,13 +32,16 @@ struct Task {
 
 fn render(task: &Task) {
     println!(
-        "[{}] {} (status: {:?})",
-        task.id, task.description, task.status
+        "[{}] {} (status: {:?}, priority: {:?})",
+        task.id, task.description, task.status, task.priority
     );
 }
 
 fn list_tasks(tasks: &[Task], only_pending: bool) {
-    for task in tasks {
+    let mut view: Vec<&Task> = tasks.iter().collect();
+    view.sort_by(|a, b| b.priority.cmp(&a.priority).then(a.id.cmp(&b.id)));
+
+    for &task in &view {
         if only_pending && !matches!(task.status, Status::Pending) {
             continue;
         }
