@@ -7,6 +7,9 @@ This is the third version of the same tool. The point of the repo is the
 progression, not the tool - same requirements, three implementations, with
 the trade-offs written down at each step.
 
+The Python versions live at https://github.com/justmeFRUZ/task-manager-py.
+
+
 ## Demo
 
 ![CLI demo](demo.png)
@@ -14,14 +17,41 @@ the trade-offs written down at each step.
 ## What it does
 
     task-manager-rs.exe add "write README"
+    task-manager-rs.exe add "fix login bug" work urgent
     task-manager-rs.exe list
     task-manager-rs.exe list --pending
+    task-manager-rs.exe list --tag work
     task-manager-rs.exe done <id>
     task-manager-rs.exe rm <id>
 
+
+    
 State lives in tasks.json, resolved relative to the current working
 directory. That is why the CLI is exercised from a temp dir, never from the
 repo root - see error-comparison-notes.md for the temp-dir reasoning.
+
+Output is sorted High-priority first, then by ascending id. Every task created via the CLI currently gets the default priority Medium - there is no --priority flag yet.
+
+## Building and running
+
+Requires the Rust toolchain (rustup). From the repo root:
+
+    cargo build --release
+
+Run the tests from the repo root:
+
+    cargo test
+
+The binary is written to target/release/task-manager-rs.exe. Because
+tasks.json is resolved relative to the current working directory, not
+the repo root, run the CLI from a scratch directory and invoke the
+binary by its full path:
+
+    cd /tmp
+    /c/Users/user/IT-Projects/task-manager-rs/target/release/task-manager-rs.exe add "write README"
+    /c/Users/user/IT-Projects/task-manager-rs/target/release/task-manager-rs.exe list
+
+On Unix the .exe suffix is absent.
 
 ## Step 1 - Python, no tests
 
