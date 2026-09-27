@@ -1,5 +1,8 @@
 # task-manager-rs
 
+[![CI](https://github.com/justmeFRUZ/task-manager-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/justmeFRUZ/task-manager-rs/actions/workflows/ci.yml)
+
+
 A small CLI task manager: add, list, done, rm. Tasks persist to a JSON
 file (tasks.json) in the current working directory.
 
