@@ -57,6 +57,10 @@ impl Task {
             tags,
         }
     }
+    
+    fn mark_done(&mut self) {
+        self.status = Status::Done;
+    }
 }
 
 fn list_tasks(tasks: &[Task], only_pending: bool, tag_filter: Option<&str>) {
@@ -104,7 +108,7 @@ fn parse_tags(rest: &[String]) -> Vec<String> {
 fn mark_done(tasks: &mut [Task], id: u32) -> Result<(), TaskError> {
     for task in tasks.iter_mut() {
         if task.id == id {
-            task.status = Status::Done;
+            task.mark_done();
             return Ok(());
         }
     }
