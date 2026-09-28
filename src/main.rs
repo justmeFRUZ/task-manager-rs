@@ -32,11 +32,13 @@ struct Task {
     tags: Vec<String>,
 }
 
-fn render(task: &Task) {
-    println!(
-        "[{}] {} (status: {:?}, priority: {:?})",
-        task.id, task.description, task.status, task.priority
-    );
+impl Task {
+    fn render(&self) {
+        println!(
+            "[{}] {} (status: {:?}, priority: {:?})",
+            self.id, self.description, self.status, self.priority
+        );
+    }
 }
 
 fn list_tasks(tasks: &[Task], only_pending: bool, tag_filter: Option<&str>) {
@@ -50,7 +52,7 @@ fn list_tasks(tasks: &[Task], only_pending: bool, tag_filter: Option<&str>) {
         if tag_filter.is_some_and(|tag| !task.tags.iter().any(|t| t.as_str() == tag)) {
             continue;
         }
-        render(task);
+        task.render();
     }
 }
 
