@@ -39,6 +39,14 @@ impl Task {
             self.id, self.description, self.status, self.priority
         );
     }
+
+    fn is_pending(&self) -> bool {
+        matches!(self.status, Status::Pending)
+    }
+
+    fn has_tag(&self, tag: &str) -> bool {
+        self.tags.iter().any(|t| t.as_str() == tag)
+    }
 }
 
 fn list_tasks(tasks: &[Task], only_pending: bool, tag_filter: Option<&str>) {
@@ -46,10 +54,10 @@ fn list_tasks(tasks: &[Task], only_pending: bool, tag_filter: Option<&str>) {
     view.sort_by(|a, b| b.priority.cmp(&a.priority).then(a.id.cmp(&b.id)));
 
     for &task in &view {
-        if only_pending && !matches!(task.status, Status::Pending) {
+        if only_pending && !task.is_pending() {
             continue;
         }
-        if tag_filter.is_some_and(|tag| !task.tags.iter().any(|t| t.as_str() == tag)) {
+        if tag_filter.is_some_and(|tag| !task.has_tag(tag)) {
             continue;
         }
         task.render();
