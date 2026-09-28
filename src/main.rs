@@ -47,6 +47,16 @@ impl Task {
     fn has_tag(&self, tag: &str) -> bool {
         self.tags.iter().any(|t| t.as_str() == tag)
     }
+
+    fn new(id: u32, description: String, tags: Vec<String>) -> Task {
+        Task {
+            id,
+            description,
+            status: Status::Pending,
+            priority: Priority::Medium,
+            tags,
+        }
+    }
 }
 
 fn list_tasks(tasks: &[Task], only_pending: bool, tag_filter: Option<&str>) {
@@ -73,13 +83,7 @@ fn add_task(tasks: &mut Vec<Task>, description: String, tags: Vec<String>) -> u3
     }
 
     let new_id = max_id + 1;
-    tasks.push(Task {
-        id: new_id,
-        description,
-        status: Status::Pending,
-        priority: Priority::Medium,
-        tags,
-    });
+    tasks.push(Task::new(new_id, description, tags));
     new_id
 }
 
