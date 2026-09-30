@@ -34,10 +34,7 @@ struct Task {
 
 impl Task {
     fn render(&self) {
-        println!(
-            "[{}] {} (status: {:?}, priority: {:?})",
-            self.id, self.description, self.status, self.priority
-        );
+        println!("{}", self);
     }
 
     fn is_pending(&self) -> bool {
@@ -62,6 +59,13 @@ impl Task {
         self.status = Status::Done;
     }
 }
+impl std::fmt::Display for Task {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}] {} (status: {:?}, priority: {:?})",
+            self.id, self.description, self.status, self.priority)
+    }
+}
+
 
 fn list_tasks(tasks: &[Task], only_pending: bool, tag_filter: Option<&str>) {
     let mut view: Vec<&Task> = tasks.iter().collect();
