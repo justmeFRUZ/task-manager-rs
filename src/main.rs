@@ -158,6 +158,13 @@ fn save_tasks(path: &str, tasks: &[Task]) -> Result<(), TaskError> {
     }
 }
 
+fn save_or_exit(path: &str, tasks: &[Task]) {
+    if let Err(e) = save_tasks(path, tasks) {
+        eprintln!("failed to save tasks: {}", e);
+        std::process::exit(1);
+    }
+}
+
 impl std::fmt::Display for TaskError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -185,10 +192,7 @@ fn main() {
         Some("add") => match args.get(2) {
             Some(description) => {
                 let id = add_task(&mut tasks, description.clone(), parse_tags(&args[3..]));
-                if let Err(e) = save_tasks(path, &tasks) {
-                    eprintln!("failed to save tasks: {}", e);
-                    std::process::exit(1);
-                }
+                save_or_exit(path, &tasks);
                 println!("added task {}", id);
             }
             None => println!("add requires a description"),
@@ -205,10 +209,7 @@ fn main() {
         Some("done") => match args.get(2).map(|s| s.parse::<u32>()) {
             Some(Ok(id)) => match mark_done(&mut tasks, id) {
                 Ok(()) => {
-                    if let Err(e) = save_tasks(path, &tasks) {
-                        eprintln!("failed to save tasks: {}", e);
-                        std::process::exit(1);
-                    }
+                    save_or_exit(path, &tasks);
                     println!("marked task {} as done", id);
                 }
                 Err(e) => println!("{}", e),
@@ -221,10 +222,7 @@ fn main() {
         Some("rm") => match args.get(2).map(|s| s.parse::<u32>()) {
             Some(Ok(id)) => match rm_task(&mut tasks, id) {
                 Ok(()) => {
-                    if let Err(e) = save_tasks(path, &tasks) {
-                        eprintln!("failed to save tasks: {}", e);
-                        std::process::exit(1);
-                    }
+                    save_or_exit(path, &tasks);
                     println!("removed task {}", id);
                 }
                 Err(e) => println!("{}", e),
