@@ -158,11 +158,13 @@ fn save_tasks(path: &str, tasks: &[Task]) -> Result<(), TaskError> {
     }
 }
 
-fn render_error(e: &TaskError) -> String {
-    match e {
-        TaskError::NotFound { id } => format!("task {} not found", id),
-        TaskError::Io(io_err) => format!("I/O error: {}", io_err),
-        TaskError::Corrupted(msg) => format!("data corrupted: {}", msg),
+impl std::fmt::Display for TaskError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TaskError::NotFound { id } => write!(f, "task {} not found", id),
+            TaskError::Io(io_err) => write!(f, "I/O error: {}", io_err),
+            TaskError::Corrupted(msg) => write!(f, "data corrupted: {}", msg),
+        }
     }
 }
 
@@ -173,7 +175,7 @@ fn main() {
     let mut tasks: Vec<Task> = match load_tasks(path) {
         Ok(t) => t,
         Err(e) => {
-            eprintln!("failed to load tasks: {}", render_error(&e));
+            eprintln!("failed to load tasks: {}", e);
             std::process::exit(1);
         }
     };
@@ -184,7 +186,7 @@ fn main() {
             Some(description) => {
                 let id = add_task(&mut tasks, description.clone(), parse_tags(&args[3..]));
                 if let Err(e) = save_tasks(path, &tasks) {
-                    eprintln!("failed to save tasks: {}", render_error(&e));
+                    eprintln!("failed to save tasks: {}", e);
                     std::process::exit(1);
                 }
                 println!("added task {}", id);
@@ -204,12 +206,12 @@ fn main() {
             Some(Ok(id)) => match mark_done(&mut tasks, id) {
                 Ok(()) => {
                     if let Err(e) = save_tasks(path, &tasks) {
-                        eprintln!("failed to save tasks: {}", render_error(&e));
+                        eprintln!("failed to save tasks: {}", e);
                         std::process::exit(1);
                     }
                     println!("marked task {} as done", id);
                 }
-                Err(e) => println!("{}", render_error(&e)),
+                Err(e) => println!("{}", e),
             },
 
             Some(Err(_)) => println!("done requires a numeric id"),
@@ -220,12 +222,12 @@ fn main() {
             Some(Ok(id)) => match rm_task(&mut tasks, id) {
                 Ok(()) => {
                     if let Err(e) = save_tasks(path, &tasks) {
-                        eprintln!("failed to save tasks: {}", render_error(&e));
+                        eprintln!("failed to save tasks: {}", e);
                         std::process::exit(1);
                     }
                     println!("removed task {}", id);
                 }
-                Err(e) => println!("{}", render_error(&e)),
+                Err(e) => println!("{}", e),
             },
 
             Some(Err(_)) => println!("rm requires a numeric id"),
