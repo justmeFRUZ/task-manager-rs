@@ -83,14 +83,7 @@ fn list_tasks(tasks: &[Task], only_pending: bool, tag_filter: Option<&str>) {
 }
 
 fn add_task(tasks: &mut Vec<Task>, description: String, tags: Vec<String>) -> u32 {
-    let mut max_id = 0;
-    for task in tasks.iter() {
-        if task.id > max_id {
-            max_id = task.id;
-        }
-    }
-
-    let new_id = max_id + 1;
+    let new_id = tasks.iter().map(|t| t.id).max().unwrap_or(0) + 1;
     tasks.push(Task::new(new_id, description, tags));
     new_id
 }
